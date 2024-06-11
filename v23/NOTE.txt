@@ -1,0 +1,6 @@
+How to run.
+input.bin files are examples of maps, the program actually reads 
+from stardard input, so you have to redirect stdin to that file with:
+./executable_name <input.bin
+
+I think it validates the necessary to be honest.
