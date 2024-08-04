@@ -3,13 +3,27 @@
  * I want to do a remake with more functionalities and also
  * make it quit faster (multithreading)
  * */
+#include "menu.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+#include "glob_var.h"
+#include "lib/algorithm.c"
+#include "lib/algorithm.h"
+#include "lib/defs.h"
+#include "lib/glob_var.c"
+*/
+
+#include <algorithm.h>
+// #include <play_bloxorz.h>
+
+/*
 #include "algorithm.c"
 #include "defs.h"
 #include "glob_var.c"
-
+*/
 static void init_map(void) {
   type_coordinates x;
   type_coordinates y;
@@ -25,6 +39,9 @@ static void init_map(void) {
   }
 
   map = malloc(x * y * sizeof(block_t));
+  if (nullptr == map)
+    exit(BAD_ALLOC);
+
   block_t aux;
   for (int i = 0, j; i < x; ++i) {
     for (j = 0; j < y; ++j) {
@@ -63,6 +80,9 @@ static void init_map(void) {
   }
 
   steps_map = malloc(3 * x * y * sizeof(steps_count_t));
+  if (nullptr == steps_map)
+    exit(BAD_ALLOC);
+
   __builtin_memset(steps_map, 255, 3 * x * y * sizeof(steps_count_t));
 
   // x represents the amount of rows, but map_size_x represents the width of the
@@ -82,7 +102,16 @@ static void init_map(void) {
   }
 }
 
-void menu(void) {
+void menu(enum Modes mode) {
+  switch (mode) {
+  case SOLVE:
+    solve_map();
+  case PLAY:
+    solve_map();
+  }
+}
+
+void solve_map(void) {
   init_map();
   thread_args th_aux;
   struct Position pos_init;
@@ -93,75 +122,91 @@ void menu(void) {
   pos_init.y = start_y;
 
   th_aux.path = nullptr;
-  th_aux.steps = 1;
+  th_aux.steps = 0;
 
   struct Path *path1 = malloc(sizeof(struct Path));
   struct Path *path2 = malloc(sizeof(struct Path));
   struct Path *path3 = malloc(sizeof(struct Path));
   struct Path *path4 = malloc(sizeof(struct Path));
 
+  if (!(path1 && path2 && path3 && path4))
+    exit(BAD_ALLOC);
+
+  path1->from = path2->from = path3->from = path4->from = nullptr;
+  path1->colgados = path2->colgados = path3->colgados = path4->colgados = 3;
+
   // Raster total RAM usage
   dinamic_RAM_usage += 4 * sizeof(struct Path);
 
-  void *ret1;
+  /*void *ret1;
   void *ret2;
   void *ret3;
-  void *ret4;
-  ret1 = ret2 = ret3 = ret4 = nullptr;
-
-  steps_map[start_x * map_size_x + start_y] = 0;
-
-  (path1->from) = (path2->from) = (path3->from) = (path4->from) = nullptr;
+  void *ret4;*/
+  // steps_map[start_x * map_size_x + start_y] = 0;
 
   mov_arg(&pos_th, &pos_init, NORTH);
   printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
 
+  th_aux.steps = 0;
   path1->move = th_aux.move = NORTH;
   th_aux.pos = pos_th;
   th_aux.path = path1;
-  if (is_legal(pos_th, 1))
-    ret1 = mov(&th_aux);
-  /*
-    mov_arg(&pos_th, &pos_init, EAST);
-    printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+  if (is_legal_position((void *)&th_aux))
+    mov(&th_aux);
+  else
+    free(path1);
 
-    path2->move = (th_aux.move = EAST);
-    th_aux.pos = pos_th;
-    th_aux.path = path2;
-    if (is_legal(pos_th, 1))
-      ret2 = mov(&th_aux);
+  mov_arg(&pos_th, &pos_init, EAST);
+  printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
 
-    mov_arg(&pos_th, &pos_init, SOUTH);
-    printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+  path2->move = (th_aux.move = EAST);
+  th_aux.pos = pos_th;
+  th_aux.path = path2;
+  if (is_legal_position((void *)&th_aux))
+    mov(&th_aux);
+  else
+    free(path2);
 
-    path3->move = (th_aux.move = SOUTH);
-    th_aux.pos = pos_th;
-    th_aux.path = path3;
-    if (is_legal(pos_th, 1))
-      ret3 = mov(&th_aux);
-    mov_arg(&pos_th, &pos_init, WEST);
-    printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+  mov_arg(&pos_th, &pos_init, SOUTH);
+  printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
 
-    path4->move = th_aux.move = WEST;
-    th_aux.pos = pos_th;
-    th_aux.path = path4;
-    if (is_legal(pos_th, 1))
-      ret4 = mov(&th_aux);
-  */
-  printf("FINAL RETURN VALUES: (%p, %p, %p, %p)\n", ret1, ret2, ret3, ret4);
+  path3->move = (th_aux.move = SOUTH);
+  th_aux.pos = pos_th;
+  th_aux.path = path3;
+  if (is_legal_position((void *)&th_aux))
+    mov(&th_aux);
+  else
+    free(path3);
+
+  mov_arg(&pos_th, &pos_init, WEST);
+  printf("(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  path4->move = th_aux.move = WEST;
+  th_aux.pos = pos_th;
+  th_aux.path = path4;
+  if (is_legal_position((void *)&th_aux))
+    mov(&th_aux);
+  else
+    free(path4);
+
   if (current_shortest_path) {
+    // printf("ret3: %p\n", ret3);
     char *strs[] = {"UP", "RIGHT", "DOWN", "LEFT"};
-    printf("SHORTEST PATH:\n");
+    fprintf(stderr, "SHORTEST PATH:\n");
     struct Path *path_aux = current_shortest_path;
-    while (path_aux) {
-      printf("%s ", strs[path_aux->move]);
+    while (nullptr != path_aux) {
+      fprintf(stderr, "%s ", strs[path_aux->move]);
       path_aux = path_aux->from;
     }
-    putchar(10);
+    borrar_path(current_shortest_path);
+    putc(10, stderr);
   } else {
     printf("No paths found so far\n");
-    printf("current_shortest_path: %p\n\n", current_shortest_path);
+    printf("current_shortest_path: %p\n\n", (void *)current_shortest_path);
   }
 
   printf("dinamic_RAM_usage: %zu bytes\n\n", dinamic_RAM_usage);
+  free(map);
+  free(steps_map);
+  // TODO
 }

@@ -1,0 +1,3 @@
+TODO 1: Optimizar el algoritmo
+TODO 2: Añadir jugabilidad
+TODO 3: 
