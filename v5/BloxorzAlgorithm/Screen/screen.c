@@ -13,7 +13,7 @@ Color_t LastColor1, LastColor2;
 
 struct Position RenderPos;
 
-const Color_t Var_player_color = {255, 200, 165};
+const Color_t Var_player_color = {255, 0, 165};
 const Color_t Var_background_color = {60, 60, 60};
 
 // static SDL_Rect *RectMatrix;

@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "glob_var.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -40,6 +41,21 @@ void init_files(void) {
   }
 }
 
+struct CoordinateBlock {
+  block_t block;
+  type_coordinates x, y;
+} __attribute__((packed));
+
+#define HACER 0
+#define DESTRUIR 1
+struct BlockFlag {
+  // Aparecer o destruir
+  unsigned hacer : 1;
+
+  unsigned short block_cant;
+  struct CoordinateBlock *CoordinateBlockArr;
+};
+
 /*
  * Syntaxis for flags that I will make now (27 de agosto de 2024):
  * - Cada flag está por defecto en estado 0 (puede tener dos o más estados).
@@ -55,9 +71,143 @@ void init_files(void) {
  * enunciarán como números a partir de un cierto rango llamado el límite
  * inferior (nombre xd), Cada botón afecta el estado de una o más flags.
  *
- * Para la lectura de las banderas, se debe especificar su nombre (un número)
+ * Para la lectura de las banderas, se debe especificar su nombre (un número).
+ * Para simplificar, solo se especificará si una flag tiene dos estaados.
  * */
+
+/*
+ * - El primer número ingresado es la cantidad de flags.
+ * - El segundo es qué hará (eliminar o aparecer).
+ * - Tercero es a cuántos bloques afectará.
+ * - Los siguientes argumentos son las posiciones en x e y de los bloques a
+ * modificarse.
+ * Si hace aparecer, entonces se ignora el tipo de bloque de CoordinateBlock
+ * *arr; Caso contrario se hace aparecer ese bloque.
+ *
+ * Para verificar una posición legal en caso de que una flag esté ectivada,
+ * entonces se reemplaza el tipo de bloque momentáneamente y luego se regresa al
+ * estado original.
+ * */
+
+struct BlockFlag *BlockFlagArr = nullptr;
+int LenBlockFlagArr = 0;
+
+#define LIM_BLOCKFLAGARR 5
+#define TOO_MUCH_FLAGS 10
+#define POR_BOLUDO 1729
+// Si se ingresa una cantidad no positiva para la bandera, entonces se considera
+// que no hay banderas
+void leer_flags(void) {
+  if (1 != scanf(" %d", &LenBlockFlagArr) ||
+      LenBlockFlagArr > LIM_BLOCKFLAGARR) {
+    fprintf(stderr, "Se ha excedido el límite de flags\n");
+    exit(TOO_MUCH_FLAGS);
+  }
+  if (LenBlockFlagArr <= 0) {
+    LenBlockFlagArr = 0;
+    return;
+  }
+
+  BlockFlagArr = malloc(LenBlockFlagArr * sizeof(struct BlockFlag));
+  if (nullptr == BlockFlagArr) {
+    perror("malloc");
+    exit(BAD_ALLOC);
+  }
+
+  int c;
+  for (int i = 0; i < 0; ++i) {
+    while ((c = getchar()) == ' ' || c == '\n' || c == '\t')
+      ;
+    switch (c) {
+    case 'h':
+      BlockFlagArr[i].hacer = HACER;
+      break;
+    case 'd':
+      BlockFlagArr[i].hacer = DESTRUIR;
+      break;
+    default:
+      printf("Opción de acción desconocida: %c", c);
+    }
+
+#define LIM_SUP_BLOCK_MODIFY 10
+    int BlockCant;
+    if (1 != scanf(" %d", &BlockCant) || BlockCant <= 0 ||
+        BlockCant >= LIM_SUP_BLOCK_MODIFY) {
+      fprintf(stderr, "BlockCant: Impropio\n");
+      exit(POR_BOLUDO);
+    }
+
+    BlockFlagArr[i].block_cant = BlockCant;
+    BlockFlagArr[i].CoordinateBlockArr =
+        malloc(BlockCant * sizeof(struct CoordinateBlock));
+    if (nullptr == BlockFlagArr[i].CoordinateBlockArr) {
+      perror("malloc");
+      exit(BAD_ALLOC);
+    }
+
+    for (int j = 0; j < BlockCant; ++j) {
+      if (1 !=
+          scanf(" %hhu",
+                (uint8_t *)&(BlockFlagArr[i].CoordinateBlockArr[j].block))) {
+        fprintf(stderr,
+                "No se leyó algo que tenga sentido en el tipo de bloque\n");
+        exit(POR_BOLUDO);
+      }
+      if (!scanf(READ_TEMPLATE_COORDINATES,
+                 &(BlockFlagArr[i].CoordinateBlockArr[j].x)) ||
+          BlockFlagArr[i].CoordinateBlockArr[j].x < INF_LIM ||
+          !scanf(READ_TEMPLATE_COORDINATES,
+                 &(BlockFlagArr[i].CoordinateBlockArr[j].y)) ||
+          BlockFlagArr[i].CoordinateBlockArr[j].x < INF_LIM) {
+        fprintf(stderr, "Improper input _a\n");
+        exit(1);
+      }
+    }
+  }
+}
+
+/*
+ * Algo que tiene sentido es leer todo el mapa primero y luego leer los botones
+ * */
+struct Bottom {
+  unsigned action : 2;
+  type_coordinates x, y;
+
+  // Activate, deactivate, flip (0, 1, 2)
+  uint8_t CoordinateDescriptor;
+  // Coordinate descriptor is the number of the flag the is going to be canged
+};
+
+struct Bottom *ArrBottoms = nullptr;
+int LenArrBottoms = 0;
+
+#define LIM_SUP_LENARRBOTTOMS 5
+void leer_botones(void) {
+  if (nullptr == map || nullptr == steps_map) {
+    fprintf(stderr, "Aún no se leyó el mapa??\n");
+    exit(POR_BOLUDO);
+  }
+
+  if (1 != scanf(" %d", &LenArrBottoms) ||
+      LenArrBottoms > LIM_SUP_LENARRBOTTOMS) {
+    fprintf(stderr, "Improper input while reading LenArrBottoms\n");
+    exit(POR_BOLUDO);
+  }
+
+  ArrBottoms = malloc(LenArrBottoms * sizeof(struct Bottom));
+  for (int i = 0; i < LenArrBottoms; ++i) {
+    if (1 != scanf(READ_TEMPLATE_COORDINATES, &(ArrBottoms[i].x)) ||
+        ArrBottoms[i].x >= map_size_y ||
+        1 != scanf(READ_TEMPLATE_COORDINATES, &(ArrBottoms[i].y)) ||
+        ArrBottoms[i].y >= map_size_x
+
+    ) {
+    }
+  }
+}
+
 void init_map(void) {
+
   type_coordinates x;
   type_coordinates y;
 
@@ -69,6 +219,10 @@ void init_map(void) {
       !scanf(READ_TEMPLATE_COORDINATES, &y) || y < INF_LIM) {
     fprintf(stderr, "Improper input _a\n");
     exit(1);
+  }
+
+  if (1 == FileFlags.flags) {
+    leer_flags();
   }
 
   map = malloc(x * y * sizeof(block_t));
