@@ -1,0 +1,2 @@
+/bin/bloxorz
+/usr/lib/libbloxorz_algorithm.so

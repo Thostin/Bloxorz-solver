@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/bloxorz.dir/main.c.o CMakeFiles/bloxorz.dir/menu.c.o -o bloxorz  -Wl,-rpath,/home/thotstin/Code/C/p/bloxorz/v3/build/SolvingAlgorithm: SolvingAlgorithm/libbloxorz_algorithm.so 

@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,libbloxorz_algorithm.so -o libbloxorz_algorithm.so CMakeFiles/bloxorz_algorithm.dir/algorithm.c.o CMakeFiles/bloxorz_algorithm.dir/glob_var.c.o 

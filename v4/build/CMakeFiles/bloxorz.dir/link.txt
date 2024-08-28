@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/bloxorz.dir/main.c.o CMakeFiles/bloxorz.dir/menu.c.o -o bloxorz   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib: BloxorzAlgorithm/libbloxorz_algorithm.a /usr/local/lib/libSDL2.so 

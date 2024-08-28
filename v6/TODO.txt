@@ -1,0 +1,4 @@
+TODO 1: Optimizar el algoritmo      | HECHO
+TODO 2: Añadir jugabilidad          | NO HECHO
+TODO 3: Implementar CMAKE           | HECHO
+TODO 4: Implementar gráficos        | NO HECHO

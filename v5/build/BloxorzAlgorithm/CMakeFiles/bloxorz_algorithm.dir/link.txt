@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbloxorz_algorithm.a CMakeFiles/bloxorz_algorithm.dir/Solving/algorithm.c.o CMakeFiles/bloxorz_algorithm.dir/GlobalVariables/glob_var.c.o CMakeFiles/bloxorz_algorithm.dir/Playing/play_bloxorz.c.o CMakeFiles/bloxorz_algorithm.dir/Screen/screen.c.o
+/usr/bin/ranlib libbloxorz_algorithm.a
