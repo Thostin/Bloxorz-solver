@@ -4,6 +4,8 @@
  * make it quit faster (multithreading)
  * */
 #include "menu.h"
+#include "algorithm.h"
+#include "play_bloxorz.h"
 
 #include <glob_var.h>
 #include <stdio.h>
@@ -168,15 +170,289 @@ void menu(int argc, char *argv[]) {
   init_files();
   switch (mode) {
   case SOLVE:
-    solve_map(true);
+
+    if (1 == FileFlags.flags)
+      bottom_solve_map(true);
+    else
+      solve_map(true);
     break;
   case PLAY:
-    bottom_play_map();
+    if (1 == FileFlags.flags)
+      bottom_play_map();
+    else
+      play_map();
     break;
   case AUTOSOLVE:
     solve_map(false);
     animate_map();
   }
+}
+
+void bottom_solve_map(Bool delete_path) {
+  init_map();
+  bottom_thread_args th_aux;
+
+  struct Position pos_init;
+  struct Position pos_th;
+
+  pos_init.orientation = 0;
+  pos_init.x = start_x;
+  pos_init.y = start_y;
+
+  steps_map[start_x * map_size_x + start_y] = 0;
+  th_aux.path = nullptr;
+  // th_aux.steps = 0;
+
+  struct Path *path1 = malloc(sizeof(struct Path));
+  struct Path *path2 = malloc(sizeof(struct Path));
+  struct Path *path3 = malloc(sizeof(struct Path));
+  struct Path *path4 = malloc(sizeof(struct Path));
+
+  if (!(path1 && path2 && path3 && path4))
+    exit(BAD_ALLOC);
+
+  path1->from = path2->from = path3->from = path4->from = nullptr;
+  path1->colgados = path2->colgados = path3->colgados = path4->colgados = 4;
+
+  // Raster total RAM usage
+  // dinamic_RAM_usage += 4 * sizeof(struct Path);
+
+  /*void *ret1;
+  void *ret2;
+  void *ret3;
+  void *ret4;*/
+  // steps_map[start_x * map_size_x + start_y] = 0;
+
+  struct ExtendedPosition pos_arg;
+  mov_arg(&pos_th, &pos_init, NORTH);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  pos_arg.Pos = pos_th;
+  pos_arg.next = nullptr;
+  pos_arg.f.fulval = 0;
+  pos_arg.steps = 1;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  path1->move = th_aux.move = NORTH;
+  th_aux.path = path1;
+
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path1);
+
+  /******/
+
+  mov_arg(&pos_th, &pos_init, EAST);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  pos_arg.Pos = pos_th;
+  pos_arg.next = nullptr;
+  pos_arg.f.fulval = 0;
+  pos_arg.steps = 1;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  path2->move = th_aux.move = EAST;
+  th_aux.path = path2;
+
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path2);
+
+  /******/
+
+  mov_arg(&pos_th, &pos_init, SOUTH);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  pos_arg.Pos = pos_th;
+  pos_arg.next = nullptr;
+  pos_arg.f.fulval = 0;
+  pos_arg.steps = 1;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  path3->move = th_aux.move = SOUTH;
+  th_aux.path = path3;
+
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path3);
+
+  /******/
+
+  mov_arg(&pos_th, &pos_init, WEST);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  pos_arg.Pos = pos_th;
+  pos_arg.next = nullptr;
+  pos_arg.f.fulval = 0;
+  pos_arg.steps = 1;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  path4->move = th_aux.move = WEST;
+  th_aux.path = path4;
+
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path4);
+  undo_flags();
+
+  /*
+  mov_arg(&pos_th, &pos_init, EAST);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  // th_aux.steps = 0;
+  path2->move = th_aux.move = EAST;
+  th_aux.path = path2;
+
+  pos_arg.Pos = pos_th;
+
+  pos_arg.f.fulval = 0;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path2);
+
+  / *****
+
+  mov_arg(&pos_th, &pos_init, SOUTH);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  // th_aux.steps = 0;
+  path3->move = th_aux.move = SOUTH;
+  th_aux.path = path3;
+
+  pos_arg.Pos = pos_th;
+
+  pos_arg.f.fulval = 0;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path3);
+
+  / *****
+
+  mov_arg(&pos_th, &pos_init, WEST);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  // th_aux.steps = 0;
+  path4->move = th_aux.move = WEST;
+  th_aux.path = path4;
+
+  pos_arg.Pos = pos_th;
+
+  pos_arg.f.fulval = 0;
+  if (is_inside_map(pos_th))
+    bottom_detect_in_bottom(pos_th, &pos_arg.f);
+  undo_flags();
+  do_flags(pos_arg.f);
+
+  th_aux.pos = pos_arg;
+  if (bottom_is_legal_position((void *)&pos_arg))
+    bottom_mov(&th_aux);
+  else
+    free(path4);
+*/
+  /*
+  mov_arg(&pos_th, &pos_init, EAST);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  // th_aux.steps = 0;
+  path2->move = (th_aux.move = EAST);
+  th_aux.pos = pos_th;
+  th_aux.path = path2;
+
+  pos_arg.pos_arg = pos_th;
+  if (is_legal_position((void *)&pos_arg))
+    mov(&th_aux);
+  else
+    free(path2);
+
+  mov_arg(&pos_th, &pos_init, SOUTH);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  th_aux.steps = 0;
+  path3->move = (th_aux.move = SOUTH);
+  th_aux.pos = pos_th;
+  th_aux.path = path3;
+
+  pos_arg.pos_arg = pos_th;
+  if (is_legal_position((void *)&pos_arg))
+    mov(&th_aux);
+  else
+    free(path3);
+
+  mov_arg(&pos_th, &pos_init, WEST);
+  fprintf(stdverbose, "(%u, %u, %u)\n", pos_th.orientation, pos_th.x, pos_th.y);
+
+  th_aux.steps = 0;
+  path4->move = th_aux.move = WEST;
+  th_aux.pos = pos_th;
+  th_aux.path = path4;
+
+  pos_arg.pos_arg = pos_th;
+  if (is_legal_position((void *)&pos_arg))
+    mov(&th_aux);
+  else
+    free(path4);
+*/
+  extern unsigned int TotalSteps;
+
+  if (current_shortest_path) {
+    // printf("ret3: %p\n", ret3);
+    char *strs[] = {"UP", "RIGHT", "DOWN", "LEFT"};
+    fprintf(stdout, "SHORTEST PATH:\n");
+    struct Path *path_aux = current_shortest_path;
+    while (nullptr != path_aux) {
+      ++TotalSteps;
+      fprintf(stderr, "%s ", strs[path_aux->move]);
+      path_aux = path_aux->from;
+    }
+    if (true == delete_path)
+      borrar_path(current_shortest_path);
+    putc(10, stderr);
+  } else {
+    fprintf(stdout, "No paths found so far\n");
+    fprintf(stdout, "current_shortest_path: %p\n\n",
+            (void *)current_shortest_path);
+  }
+
+  fprintf(stdout, "Total steps: %d\n", TotalSteps);
+  fprintf(stdtrash, "dinamic_RAM_usage: %zu bytes\n\n", dinamic_RAM_usage);
+  if (true == delete_path)
+    free(map);
+  free(steps_map);
+  // TODO
 }
 
 void solve_map(Bool delete_path) {

@@ -21,15 +21,200 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void CRASH_GAME(char *func_msg) {
-  SDL_Quit();
-  printf("The game was intentionally crashed by %s\n", func_msg);
-  exit(1);
+#ifndef POR_BOLUDO
+#warning "POR_BOLUDO wasn't defined yet"
+#define POR_BOLUDO 1729
+#endif
+
+void Render_execute_action(uint8_t ActionDescriptor) {
+  fprintf(stderr, "ActionDescriptor in Render_execute_action: %d\n",
+          ActionDescriptor);
+  if (ActionDescriptor >= LenPossibleActionList) {
+    fprintf(stderr,
+            "How is ActionDescriptor accesing a non-existent Action?\n");
+    exit(POR_BOLUDO);
+  }
+  switch (PossibleActionList[ActionDescriptor].jogo) {
+  case 0:
+    switch (PossibleActionList[ActionDescriptor].FlagDescriptor) {
+    case 0:
+      ActualRenderFlagState.f0 = 0;
+      break;
+    case 1:
+      ActualRenderFlagState.f1 = 0;
+      break;
+    case 2:
+      ActualRenderFlagState.f2 = 0;
+      break;
+    case 3:
+      ActualRenderFlagState.f3 = 0;
+      break;
+    case 4:
+      ActualRenderFlagState.f4 = 0;
+      break;
+    }
+    break;
+
+  case 1:
+    switch (PossibleActionList[ActionDescriptor].FlagDescriptor) {
+    case 0:
+      ActualRenderFlagState.f0 = 1;
+      break;
+    case 1:
+      ActualRenderFlagState.f1 = 1;
+      break;
+    case 2:
+      ActualRenderFlagState.f2 = 1;
+      break;
+    case 3:
+      ActualRenderFlagState.f3 = 1;
+      break;
+    case 4:
+      ActualRenderFlagState.f4 = 1;
+      break;
+    }
+    break;
+
+  case 2:
+    switch (PossibleActionList[ActionDescriptor].FlagDescriptor) {
+    case 0:
+      ActualRenderFlagState.f0 += 1;
+      break;
+    case 1:
+      ActualRenderFlagState.f1 += 1;
+      break;
+    case 2:
+      ActualRenderFlagState.f2 += 1;
+      break;
+    case 3:
+      ActualRenderFlagState.f3 += 1;
+      break;
+    case 4:
+      ActualRenderFlagState.f4 += 1;
+      break;
+    }
+    break;
+  default:
+    fprintf(stderr, "How did jogo got a value other that 0, 1 or 2?\n");
+#define ILLEGAL_VALUE 345
+    exit(ILLEGAL_VALUE);
+  }
 }
 
-int is_legal_position_no_test_steps(const struct Position pos_arg) {
-  fprintf(stdverbose, "\n$$$$$$$$$$$$$$$$$$$$$$$\n");
+void execute_bottom(uint8_t BottomDescriptor) {
+  if (BottomDescriptor >= LenArrBottoms) {
+    fprintf(stderr, "How did BottomDescriptor access an unexistent Bottom?\n");
+    exit(POR_BOLUDO);
+  }
 
+  fprintf(stdverbose, "LenActionList: %d\n",
+          ArrBottoms[BottomDescriptor].LenActionList);
+
+  for (int i = 0; i < ArrBottoms[BottomDescriptor].LenActionList; ++i) {
+    Render_execute_action(
+        ArrBottoms[BottomDescriptor].ActionList[i].ActionDescriptor);
+  }
+}
+
+void bottom_mov_arg(struct Position *to_ptr,
+                    const struct Position *const restrict from_ptr,
+                    const int8_t move) {
+  const int hash[7] = {1, 2, 3, 5, 7, 11, 13};
+  const int pos_hash = hash[from_ptr->orientation] * hash[move + 3];
+
+  *to_ptr = *from_ptr;
+
+  switch (pos_hash) {
+  // Case of orientation = 0
+  case 5:
+    to_ptr->orientation = 1;
+    to_ptr->x -= 2;
+    break;
+  case 7:
+    to_ptr->orientation = 2;
+    to_ptr->y += 1;
+    break;
+  case 11:
+    to_ptr->orientation = 1;
+    to_ptr->x += 1;
+    break;
+  case 13:
+    to_ptr->orientation = 2;
+    to_ptr->y -= 2;
+    break;
+
+  // Case of orientation = 1
+  case 10:
+    to_ptr->orientation = 0;
+    to_ptr->x -= 1;
+    break;
+  case 14:
+    to_ptr->orientation = 1;
+    to_ptr->y += 1;
+    break;
+  case 22:
+    to_ptr->orientation = 0;
+    to_ptr->x += 2;
+    break;
+  case 26:
+    to_ptr->orientation = 1;
+    to_ptr->y -= 1;
+    break;
+
+  // Case orientation = 2
+  case 15:
+    to_ptr->orientation = 2;
+    to_ptr->x -= 1;
+    break;
+  case 21:
+    to_ptr->orientation = 0;
+    to_ptr->y += 2;
+    break;
+  case 33:
+    to_ptr->orientation = 2;
+    to_ptr->x += 1;
+    break;
+  case 39:
+    to_ptr->orientation = 0;
+    to_ptr->y -= 1;
+    break;
+  }
+}
+
+void detect_in_bottom(const struct Position pos_arg) {
+  switch (pos_arg.orientation) {
+  case 0:
+    if (map[map_size_x * pos_arg.x + pos_arg.y] >= 100) {
+      execute_bottom(map[map_size_x * pos_arg.x + pos_arg.y] - 100);
+    }
+    break;
+  case 1:
+    if (map[map_size_x * pos_arg.x + pos_arg.y] >= 100) {
+      if (ArrBottoms[map[map_size_x * pos_arg.x + pos_arg.y] - 100].pressure ==
+          0)
+        execute_bottom(map[map_size_x * pos_arg.x + pos_arg.y] - 100);
+    }
+    if (map[map_size_x * (pos_arg.x + 1) + pos_arg.y] >= 100) {
+      if (ArrBottoms[map[map_size_x * (pos_arg.x + 1) + pos_arg.y] - 100]
+              .pressure == 0)
+        execute_bottom(map[map_size_x * (pos_arg.x + 1) + pos_arg.y] - 100);
+    }
+    break;
+  case 2:
+    if (map[map_size_x * pos_arg.x + pos_arg.y] >= 100) {
+      if (ArrBottoms[map[map_size_x * pos_arg.x + pos_arg.y] - 100].pressure ==
+          0)
+        execute_bottom(map[map_size_x * pos_arg.x + pos_arg.y] - 100);
+    }
+    if (map[map_size_x * pos_arg.x + pos_arg.y + 1] >= 100) {
+      if (ArrBottoms[map[map_size_x * pos_arg.x + pos_arg.y + 1] - 100]
+              .pressure == 0)
+        execute_bottom(map[map_size_x * pos_arg.x + pos_arg.y + 1] - 100);
+    }
+  }
+}
+
+int is_inside_map(const struct Position pos_arg) {
   switch (pos_arg.orientation) {
   case 0:
     if (pos_arg.x >= map_size_y || pos_arg.y >= map_size_x) {
@@ -54,7 +239,15 @@ int is_legal_position_no_test_steps(const struct Position pos_arg) {
       return 0;
     }
   }
+  return 1;
+}
 
+/*
+int is_legal_position_no_test_steps(const struct Position pos_arg) {
+  fprintf(stdverbose, "\n$$$$$$$$$$$$$$$$$$$$$$$\n");
+
+  if (!is_inside_map(pos_arg))
+    return 0;
   unsigned block_map1;
 
   block_map1 = map[map_size_x * pos_arg.x + pos_arg.y];
@@ -101,8 +294,8 @@ int is_legal_position_no_test_steps(const struct Position pos_arg) {
 
   return 1;
 }
-
-void play_map() {
+*/
+void bottom_play_map() {
   if (EXIT_FAILURE == init_SDL())
     CRASH_GAME("Game crashed because of an SDL error");
 
@@ -148,7 +341,10 @@ void play_map() {
     if (SDL_KEYDOWN == e.type) {
       switch (e.key.keysym.sym) {
 #define la_macron(MOVE)                                                        \
-  mov_arg(&DstPos, &ActPos, MOVE);                                             \
+  bottom_mov_arg(&DstPos, &ActPos, MOVE);                                      \
+  detect_in_bottom(DstPos);                                                    \
+  Render_undo_flags();                                                         \
+  Render_do_flags();                                                           \
   switch (is_legal_position_no_test_steps(DstPos)) {                           \
   case 0:                                                                      \
     printf("GAME OVER\n");                                                     \
@@ -209,6 +405,7 @@ void play_map() {
   CRASH_GAME("opa");
 }
 
+/*
 void animate_map(void) {
   if (EXIT_FAILURE == init_SDL())
     CRASH_GAME("Game crashed because of an SDL error");
@@ -283,3 +480,4 @@ void animate_map(void) {
   SDL_Quit();
   CRASH_GAME("opa");
 }
+*/

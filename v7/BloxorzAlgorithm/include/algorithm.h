@@ -32,17 +32,6 @@ void *mov(const void *_args);
 void init_map();
 void init_files(void);
 
-union FlagsFlags {
-  uint8_t fulval;
-  struct {
-    unsigned f0 : 1;
-    unsigned f1 : 1;
-    unsigned f2 : 1;
-    unsigned f3 : 1;
-    unsigned f4 : 1;
-  };
-};
-
 extern union FlagsFlags ActualRenderFlagState;
 
 struct CoordinateBlock {
@@ -107,3 +96,11 @@ void Render_do_sflag(uint8_t FlagDescriptor);
 void Render_do_flags();
 void Render_undo_flags(void);
 void RenderResetFlags(void);
+
+int is_inside_map(const struct Position pos_arg);
+
+void bottom_detect_in_bottom(const struct Position pos_arg,
+                             union FlagsFlags *f);
+
+int bottom_is_legal_position(const void *_args);
+void *bottom_mov(const void *_args);

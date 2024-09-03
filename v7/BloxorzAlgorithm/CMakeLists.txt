@@ -4,8 +4,13 @@ cmake_minimum_required(VERSION 3.7)
 
 add_library(
   bloxorz_algorithm STATIC
-  Solving/algorithm.c GlobalVariables/glob_var.c Playing/play_bloxorz.c
-  Screen/screen.c Animate/animate.c Playing/bottom_play_bloxorz.c)
+  Solving/algorithm.c
+  Solving/bottom_algorithm.c
+  GlobalVariables/glob_var.c
+  Playing/play_bloxorz.c
+  Screen/screen.c
+  Animate/animate.c
+  Playing/bottom_play_bloxorz.c)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 

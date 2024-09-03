@@ -511,12 +511,6 @@ void init_map(void) {
 // Pero hay otra cosa, cada vez que haga la llamada recursiva de la función,
 // tendré que guardar el estado de las flags manualmente
 
-struct ExtentedPosition {
-  struct Position Pos;
-  union FlagsFlags f;
-  struct ExtentedPosition *next;
-};
-
 struct CoordinateBlock
     __buffer_aux_blocks[LIM_SUP_BLOCK_MODIFY * LIM_BLOCKFLAGARR];
 int __flags_i = 0;
@@ -700,11 +694,8 @@ void mov_arg(struct Position *to_ptr,
 // flags activas. La idea es crear una lista con "Posiciones extendidas", que si
 // una o más flags están activas, entonces se guarda esa posición en la lista y
 // no en steps_map.
-int is_legal_position(const void *_args) {
-  fprintf(stdverbose, "\n$$$$$$$$$$$$$$$$$$$$$$$\n");
-  const args_IsLegalPosition *args = (args_IsLegalPosition *)_args;
-  const struct Position pos_arg = args->pos_arg;
 
+int is_inside_map(const struct Position pos_arg) {
   switch (pos_arg.orientation) {
   case 0:
     if (pos_arg.x >= map_size_y || pos_arg.y >= map_size_x) {
@@ -729,6 +720,42 @@ int is_legal_position(const void *_args) {
       return 0;
     }
   }
+  return 1;
+}
+
+int is_legal_position(const void *_args) {
+  fprintf(stdverbose, "\n$$$$$$$$$$$$$$$$$$$$$$$\n");
+  const args_IsLegalPosition *args = (args_IsLegalPosition *)_args;
+  const struct Position pos_arg = args->pos_arg;
+
+  if (!is_inside_map(pos_arg))
+    return 0;
+  /*
+  switch (pos_arg.orientation) {
+  case 0:
+    if (pos_arg.x >= map_size_y || pos_arg.y >= map_size_x) {
+      fprintf(stdverbose, "FALLS DOWN THE MAP\n");
+      fprintf(stdverbose, "----------------------------------------\n\n");
+      return 0;
+    }
+    break;
+  case 1:
+    if (pos_arg.x >= map_size_y || pos_arg.x + 1 >= map_size_y ||
+        pos_arg.y >= map_size_x) {
+      fprintf(stdverbose, "FALLS DOWN THE MAP\n");
+      fprintf(stdverbose, "----------------------------------------\n\n");
+      return 0;
+    }
+    break;
+  case 2:
+    if (pos_arg.x >= map_size_y || pos_arg.y + 1 >= map_size_x ||
+        pos_arg.y >= map_size_x) {
+      fprintf(stdverbose, "FALLS DOWN THE MAP\n");
+      fprintf(stdverbose, "----------------------------------------\n\n");
+      return 0;
+    }
+  }
+  */
 
   fprintf(stdverbose, "\n\nSTEPS ALREADY: %ld\n\n",
           steps_map[map_size_x * map_size_y * (pos_arg.orientation) +
@@ -803,6 +830,7 @@ void borrar_path(struct Path *path) {
   struct Path *aux = nullptr;
   do {
     aux = path->from;
+    path->from = nullptr;
     free(path);
     path = aux;
   } while (nullptr != aux && 0 == --(aux->colgados));
