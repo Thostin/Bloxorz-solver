@@ -62,9 +62,15 @@ extern SDL_Renderer *renderer;
 #define SCREEN_SIZE_Y 1080
 #else
 // Para la PC del club
-#define INIT_SCREEN_BMP_FILE "bloxorz_menu_3.bmp"
-#define GAME_OVER_SCREEN_BMP_FILE "perdiste_1.bmp"
-#define WIN_SCREEN_BMP_FILE "ganaste_1.bmp"
+#define INIT_SCREEN_BMP_FILE                                                   \
+  "/home/karai_kacho/Code/bloxorz-solver/v8/BloxorzAlgorithm/img_src/"         \
+  "bloxorz_menu_3.bmp"
+#define GAME_OVER_SCREEN_BMP_FILE                                              \
+  "/home/karai_kacho/Code/bloxorz-solver/v8/BloxorzAlgorithm/img_src/"         \
+  "perdiste_1.bmp"
+#define WIN_SCREEN_BMP_FILE                                                    \
+  "/home/karai_kacho/Code/bloxorz-solver/v8/BloxorzAlgorithm/img_src/"         \
+  "ganaste_1.bmp"
 
 #define SCREEN_SIZE_X 1366
 #define SCREEN_SIZE_Y 768
