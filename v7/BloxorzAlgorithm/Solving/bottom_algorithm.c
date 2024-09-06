@@ -37,8 +37,10 @@ int PushExtendedPosition(const struct ExtendedPosition *sample,
       if (sample->steps < node->steps) {
         node->steps = sample->steps;
         return 1;
-      } else
+      } else {
+        fprintf(stdverbose, "Too much steps in Extended Position\n");
         return 0;
+      }
     }
     aux = node;
     node = node->next;
@@ -75,8 +77,10 @@ int check_steps(const struct ExtendedPosition *nodo) {
       steps_map[map_size_x * map_size_y * (pos_arg.orientation) +
                 pos_arg.x * map_size_x + pos_arg.y] = nodo->steps;
       return 1;
-    } else
+    } else {
+      fprintf(stdverbose, "To much steps in closed Position\n");
       return 0;
+    }
   }
 
   return PushExtendedPosition(nodo, &root);
@@ -171,61 +175,71 @@ void *bottom_mov(const void *_args) {
 
   pos_arg = args->pos.Pos;
 
-  fprintf(stdtrash, "XDDDDD\n");
-
-  bottom_thread_args aux = *args;
+  bottom_thread_args aux;
   struct Path *path1, *path2, *path3, *path4;
 
   struct ExtendedPosition aux_pos;
-#define la_macro_de_la_muerte(CARDINAL, el_path)                                 \
-  mov_arg(&pos_arg, &(args->pos.Pos), CARDINAL);                                 \
-  aux.pos.Pos = pos_arg;                                                         \
-  aux_pos.Pos = pos_arg;                                                         \
-  aux_pos.steps = aux.pos.steps;                                                 \
-  if (is_inside_map(pos_arg))                                                    \
-    bottom_detect_in_bottom(pos_arg, &aux.pos.f);                                \
-  undo_flags();                                                                  \
-  do_flags(args->pos.f);                                                         \
-  aux_pos.f = aux.pos.f;                                                         \
-  is_legal = bottom_is_legal_position((void *)&aux_pos);                         \
-  if (0 != is_legal) {                                                           \
-    ++cantidad_legales;                                                          \
-    if ((el_path = malloc(sizeof(struct Path))) == nullptr)                      \
-      exit(BAD_ALLOC);                                                           \
-    el_path->from = args->path;                                                  \
-    el_path->move = aux.move = CARDINAL;                                         \
-                                                                                 \
-    switch (is_legal) {                                                          \
-    case 1:                                                                      \
-      aux.path = el_path;                                                        \
-      /* Segunda revisión, estaba así: el_path->colgados = 3, PERO DEBE SER UN \
-       *  NO UN 3*/                                                              \
-      el_path->colgados = 4;                                                     \
-      bottom_mov((void *)&aux);                                                  \
-      break;                                                                     \
-    case 2:                                                                      \
-      printf("Borrando current_shortest_path:\n");                               \
-      borrar_path(current_shortest_path);                                        \
-      (args->path)->colgados = 1;                                                \
-      current_shortest_path = el_path;                                           \
-      el_path->colgados = 1;                                                     \
-      return nullptr;                                                            \
-    }                                                                            \
-  } else {                                                                       \
-    fprintf(stdilegalmoves, "Posición ilegal: (%d, %d, %d) Pasos: %d\n",         \
-            aux_pos.Pos.orientation, aux_pos.Pos.y, aux_pos.Pos.x,               \
-            (int)aux.pos.steps);                                                 \
-    printf("Borrando path superior:\n");                                         \
-    borrar_path(args->path);                                                     \
+
+#define la_macro_de_la_muerte(CARDINAL, el_path)                                \
+  mov_arg(&pos_arg, &(args->pos.Pos), CARDINAL);                                \
+  if (is_inside_map(pos_arg)) {                                                 \
+    aux = *args;                                                                \
+    ++(aux.pos.steps);                                                          \
+                                                                                \
+    aux.pos.next = nullptr;                                                     \
+    aux_pos.next = nullptr;                                                     \
+    aux.pos.Pos = pos_arg;                                                      \
+    aux_pos.Pos = pos_arg;                                                      \
+    aux_pos.steps = aux.pos.steps;                                              \
+    bottom_detect_in_bottom(pos_arg, &aux.pos.f);                               \
+    undo_flags();                                                               \
+    /* Tercera revisión, estaba args->pos.f en do_flags en lugar de aux.pos.f  \
+     */                                                                         \
+    do_flags(aux.pos.f);                                                        \
+    aux_pos.f = aux.pos.f;                                                      \
+    is_legal = bottom_is_legal_position((void *)&aux_pos);                      \
+    if (0 != is_legal) {                                                        \
+      if ((el_path = malloc(sizeof(struct Path))) == nullptr)                   \
+        exit(BAD_ALLOC);                                                        \
+      el_path->from = args->path;                                               \
+      el_path->move = aux.move = CARDINAL;                                      \
+                                                                                \
+      switch (is_legal) {                                                       \
+      case 1:                                                                   \
+        aux.path = el_path;                                                     \
+        /* Segunda revisión, estaba así: el_path->colgados = 3, PERO DEBE SER \
+         * UN NO UN 3*/                                                         \
+        el_path->colgados = 4;                                                  \
+        bottom_mov((void *)&aux);                                               \
+        break;                                                                  \
+      case 2:                                                                   \
+        fprintf(stdverbose, "Borrando current_shortest_path:\n");               \
+        borrar_path(current_shortest_path);                                     \
+        (args->path)->colgados = 1;                                             \
+        current_shortest_path = el_path;                                        \
+        el_path->colgados = 1;                                                  \
+        return nullptr;                                                         \
+      }                                                                         \
+    } else {                                                                    \
+      fprintf(stdilegalmoves, "Posición ilegal: (%d, %d, %d) Pasos: %d\n",      \
+              aux_pos.Pos.orientation, aux_pos.Pos.y, aux_pos.Pos.x,            \
+              (int)aux.pos.steps);                                              \
+      fprintf(stdverbose, "Borrando path superior:\n");                         \
+      borrar_path(args->path);                                                  \
+    }                                                                           \
+  } else {                                                                      \
+    fprintf(stdilegalmoves, "Posición ilegal: (%d, %d, %d) Pasos: %d\n",        \
+            aux_pos.Pos.orientation, aux_pos.Pos.y, aux_pos.Pos.x,              \
+            (int)aux.pos.steps);                                                \
+    fprintf(stdverbose, "Borrando path superior:\n");                           \
+    borrar_path(args->path);                                                    \
   }
 
-  ++(aux.pos.steps);
   int is_legal;
-  int cantidad_legales = 0;
-  la_macro_de_la_muerte(NORTH, path1);
   la_macro_de_la_muerte(EAST, path2);
-  la_macro_de_la_muerte(WEST, path3);
-  la_macro_de_la_muerte(SOUTH, path4);
+  la_macro_de_la_muerte(SOUTH, path3);
+  la_macro_de_la_muerte(WEST, path4);
+  la_macro_de_la_muerte(NORTH, path1);
 
   return nullptr;
 }

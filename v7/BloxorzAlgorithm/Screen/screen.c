@@ -2,7 +2,12 @@
 #include "SDL.h"
 #include "defs.h"
 #include "glob_var.h"
+
+#include "SDL_image.h"
+
+#include <SDL_render.h>
 #include <stdint.h>
+
 // #include <stdio.h>
 
 SDL_Window *window = nullptr;
@@ -27,7 +32,8 @@ const Color_t BlockColors[] = {{190, 190, 255},
 const Color_t BottomColors[] = {{0, 0, 255}};
 
 int init_SDL(void) {
-  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS |
+               SDL_INIT_NOPARACHUTE) < 0) {
     SDL_Log("SDL2 init error: %s\n", SDL_GetError());
     // fprintf(stderr, "Could not init everything\n");
     return EXIT_FAILURE;

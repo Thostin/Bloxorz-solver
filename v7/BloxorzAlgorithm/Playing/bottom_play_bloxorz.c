@@ -27,7 +27,8 @@
 #endif
 
 void execute_action(uint8_t ActionDescriptor, union FlagsFlags *f) {
-  fprintf(stderr, "ActionDescriptor in execute_action: %d\n", ActionDescriptor);
+  fprintf(stdverbose, "ActionDescriptor in execute_action: %d\n",
+          ActionDescriptor);
   if (ActionDescriptor >= LenPossibleActionList) {
     fprintf(stderr,
             "How is ActionDescriptor accesing a non-existent Action?\n");
@@ -305,8 +306,8 @@ void detect_in_bottom(const struct Position pos_arg) {
 
 void bottom_detect_in_bottom(const struct Position pos_arg,
                              union FlagsFlags *f) {
-  printf("pos_arg.orientation in bottom_detect_in_bottom: %d\n",
-         pos_arg.orientation);
+  fprintf(stdverbose, "pos_arg.orientation in bottom_detect_in_bottom: %d\n",
+          pos_arg.orientation);
 
   switch (pos_arg.orientation) {
   case 0:
@@ -395,6 +396,7 @@ int is_legal_position_no_test_steps(const struct Position pos_arg) {
   return 1;
 }
 */
+
 void bottom_play_map() {
   if (EXIT_FAILURE == init_SDL())
     CRASH_GAME("Game crashed because of an SDL error");
@@ -505,8 +507,7 @@ void bottom_play_map() {
   CRASH_GAME("opa");
 }
 
-/*
-void animate_map(void) {
+void bottom_animate_map() {
   if (EXIT_FAILURE == init_SDL())
     CRASH_GAME("Game crashed because of an SDL error");
 
@@ -556,22 +557,43 @@ void animate_map(void) {
   }
 
   SDL_Event e;
-  int band;
+
   for (i = 0; i < TotalSteps; ++i) {
-    // printf("Is here?\n");
-    band = true;
-    while (band) {
-      SDL_PollEvent(&e);
-      if (e.type == SDL_KEYDOWN)
-        band = false;
-      // SDL_Delay(1);
-    }
-    // SDL_Delay(300);
-    // printf("Is here?\n");
-    mov_arg(&DstPos, &ActPos, move_arr[i]);
-    ActPos = DstPos;
-    // printf("Is here?\n");
-    MoveRender(move_arr[i], DstPos);
+    SDL_PollEvent(&e);
+    if (SDL_KEYDOWN == e.type) {
+#define la_re_macron(MOVE)                                                     \
+  bottom_mov_arg(&DstPos, &ActPos, MOVE);                                      \
+  detect_in_bottom(DstPos);                                                    \
+  Render_undo_flags();                                                         \
+  Render_do_flags();                                                           \
+  switch (is_legal_position_no_test_steps(DstPos)) {                           \
+  case 0:                                                                      \
+    printf("GAME OVER\n");                                                     \
+    CRASH_GAME("play_map");                                                    \
+    break;                                                                     \
+  case 1:                                                                      \
+    SDL_Log("Rendering Legal Move");                                           \
+    ActPos = DstPos;                                                           \
+    MoveRender(MOVE, ActPos);                                                  \
+    break;                                                                     \
+  case 2:                                                                      \
+    SDL_Log("Rendering Winning Move");                                         \
+    SDL_Log("Steps: %u\n", TotalSteps);                                        \
+    ActPos = DstPos;                                                           \
+    MoveRender(MOVE, ActPos);                                                  \
+    printf("YOU WON!\n");                                                      \
+    CRASH_GAME("winning the game");                                            \
+  }
+      la_re_macron(move_arr[i]);
+      // La función MoveRender ya hace eso.
+      // SDL_RenderPresent(renderer);
+      // SDL_Delay(10);
+      // SDL_Delay(10);
+    } else if (e.type == SDL_QUIT) {
+      CRASH_GAME("Game was intentionally closed by user");
+    } else
+      --i;
+    SDL_Delay(10);
   }
 
   SDL_DestroyRenderer(renderer);
@@ -580,4 +602,3 @@ void animate_map(void) {
   SDL_Quit();
   CRASH_GAME("opa");
 }
-*/

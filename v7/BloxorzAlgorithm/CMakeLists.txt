@@ -11,7 +11,9 @@ add_library(
   Screen/screen.c
   Animate/animate.c
   Playing/bottom_play_bloxorz.c)
+
 find_package(SDL2 REQUIRED)
+
 include_directories(${SDL2_INCLUDE_DIRS})
 
 add_compile_options("-Wall -Werror -Wpedantic -O3")

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// #include <unistd.h>
 
 /*
 #include "glob_var.h"
@@ -183,8 +184,14 @@ void menu(int argc, char *argv[]) {
       play_map();
     break;
   case AUTOSOLVE:
-    solve_map(false);
-    animate_map();
+
+    if (1 == FileFlags.flags) {
+      bottom_solve_map(false);
+      bottom_animate_map();
+    } else {
+      solve_map(false);
+      animate_map();
+    }
   }
 }
 
@@ -233,7 +240,7 @@ void bottom_solve_map(Bool delete_path) {
   pos_arg.steps = 1;
   if (is_inside_map(pos_th))
     bottom_detect_in_bottom(pos_th, &pos_arg.f);
-  undo_flags();
+  // undo_flags();
   do_flags(pos_arg.f);
 
   th_aux.pos = pos_arg;
@@ -245,6 +252,7 @@ void bottom_solve_map(Bool delete_path) {
   else
     free(path1);
 
+  // exit(BAD_ALLOC);
   /******/
 
   mov_arg(&pos_th, &pos_init, EAST);
