@@ -1,6 +1,8 @@
 #include "SDL.h"
 #include <stdint.h>
 
+#define MY_COMPUTER
+
 #ifdef SCREEN_SIZE_Y
 #error "Macro SCREEN_SIZE_Y already defined"
 #endif
@@ -8,9 +10,6 @@
 #ifdef SCREEN_SIZE_X
 error "Macro SCREEN_SIZE_X already defined "
 #endif
-
-#define SCREEN_SIZE_X 1280
-#define SCREEN_SIZE_Y 720
 
     /*
     #define SCREEN_SIZE_X 1920
@@ -50,7 +49,7 @@ extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 
 // For my computer:
-/*
+#ifdef MY_COMPUTER
 #define INIT_SCREEN_BMP_FILE                                                   \
   "/home/thotstin/Code/C/p/bloxorz/v8/BloxorzAlgorithm/img_src/"               \
   "bloxorz_menu_3.bmp"
@@ -58,12 +57,18 @@ extern SDL_Renderer *renderer;
   "/home/thotstin/Code/C/p/bloxorz/v8/BloxorzAlgorithm/img_src/perdiste_1.bmp"
 #define WIN_SCREEN_BMP_FILE                                                    \
   "/home/thotstin/Code/C/p/bloxorz/v8/BloxorzAlgorithm/img_src/ganaste_1.bmp"
-*/
 
-// Para la PC del Club:
+#define SCREEN_SIZE_X 1920
+#define SCREEN_SIZE_Y 1080
+#else
+// Para la PC del club
 #define INIT_SCREEN_BMP_FILE "bloxorz_menu_3.bmp"
 #define GAME_OVER_SCREEN_BMP_FILE "perdiste_1.bmp"
 #define WIN_SCREEN_BMP_FILE "ganaste_1.bmp"
+
+#define SCREEN_SIZE_X 1366
+#define SCREEN_SIZE_Y 768
+#endif
 
 extern SDL_Rect last1, last2;
 extern Color_t LastColor1, LastColor2;

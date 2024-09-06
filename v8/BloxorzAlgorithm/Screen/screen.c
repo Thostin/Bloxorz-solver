@@ -50,11 +50,10 @@ int init_SDL(void) {
     exit(1);
   }
 
-  /*
   if (SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN)) {
     SDL_Log("SDL_SetWindowFullscreen: %s", SDL_GetError());
     CRASH_GAME("Could not put window in full screen\n");
-  }*/
+  }
 
   SDL_SetRenderDrawColor(renderer, Var_background_color.r,
                          Var_background_color.g, Var_background_color.b, 255);
